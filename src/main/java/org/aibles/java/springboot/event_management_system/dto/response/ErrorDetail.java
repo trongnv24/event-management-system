@@ -9,6 +9,6 @@
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public class ErrolDetail {
+    public class ErrorDetail {
         private String message;
     }

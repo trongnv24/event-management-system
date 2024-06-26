@@ -3,7 +3,7 @@ package org.aibles.java.springboot.event_management_system.dto.response;
 import lombok.Data;
 
 @Data
-public class ErrorResponse <T>{
+public class ErrorResponse <T> {
     private String code;
     private long timestamps;
     private T error;

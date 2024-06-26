@@ -21,6 +21,11 @@ public class JwtServiceImpl implements JwtService {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
+    @Value("${jwt.expirationMs}")
+    private Long jwtExpirationMs;
+
+    @Value("${jwt.refreshExpirationMs}")
+    private Long jwtRefreshExpirationMs;
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
