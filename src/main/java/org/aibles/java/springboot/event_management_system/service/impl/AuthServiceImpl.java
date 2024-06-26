@@ -1,10 +1,12 @@
 package org.aibles.java.springboot.event_management_system.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.aibles.java.springboot.event_management_system.dto.request.ActiveOtpRequest;
 import org.aibles.java.springboot.event_management_system.dto.request.ActiveRequest;
 import org.aibles.java.springboot.event_management_system.dto.response.BaseResponse;
 import org.aibles.java.springboot.event_management_system.entity.Account;
 import org.aibles.java.springboot.event_management_system.entity.User;
+import org.aibles.java.springboot.event_management_system.exception.InvalidOtpException;
 import org.aibles.java.springboot.event_management_system.exception.InvalidRequestException;
 import org.aibles.java.springboot.event_management_system.exception.NotFoundException;
 import org.aibles.java.springboot.event_management_system.repository.AuthRepository;
@@ -70,8 +72,41 @@ public class AuthServiceImpl implements AuthService {
         return new BaseResponse("success", System.currentTimeMillis(), null);
     }
 
+    @Override
+    public BaseResponse validateActiveAccountOtp(ActiveOtpRequest request) {
+        String Username = request.getUsername();
+        String otp = request.getOtp();
+        log.info("Looking for user account with username: {}", Username);
+        Optional<Account> otpAccount = authRepository.findByUsername(Username);
+        if (otpAccount.isEmpty()) {
+            log.error("Username was not registered", Username);
+            Map<String, String> errorDetails = new HashMap<>();
+            errorDetails.put("message", "User not found");
+            throw new NotFoundException(errorDetails);
+        }
+
+        Account account = otpAccount.get();
+        if (account.isActivated()) {
+            return new BaseResponse<>("success", System.currentTimeMillis(), null);
+        }
+
+        String storedOtp = redisService.findOtp(Username);
+        if (storedOtp == null) {
+            throw new InvalidRequestException("OTP has expired");
+        } else if (!storedOtp.equals(otp)) {
+            throw new InvalidOtpException("OTP is invalid");
+        }
+        account.setActivated(true);
+        authRepository.save(account);
+
+        redisService.clearActiveOtp(Username);
+
+        return new BaseResponse("success", System.currentTimeMillis(), null);
+    }
+
     private String generateOTP() {
         Random random = new Random();
         return String.format("%06d", random.nextInt(1000000));
     }
+
 }

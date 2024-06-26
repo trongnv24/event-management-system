@@ -29,5 +29,15 @@ public class RedisServiceImpl implements RedisService {
         redisTemplate.expire(key, 3, TimeUnit.MINUTES);
         log.info("OTP {} saved to Redis for username {}", otp, username);
     }
+    @Override
+    public String findOtp(String username) {
+        return redisTemplate.opsForValue().get(username);
+    }
+    @Override
+    public void clearActiveOtp(String username) {
+        String key = "otp:" + username;
+        redisTemplate.delete(key);
+    }
 
 }
+
